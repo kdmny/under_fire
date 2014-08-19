@@ -29,6 +29,22 @@ module UnderFire
       res
     end
 
+    # @param [Hash] params hash of query string parameters to pass
+    # @param [String] api_url url for your application
+    # @return [Net::HTTPResponse]
+    def self.get(params, url)
+      uri = URI(url)
+      uri.query = URI.encode_www_form(params)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.ssl_version = 'SSLv3'
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      puts "sending request... #{uri.request_uri}"
+      req = Net::HTTP::Get.new(uri.request_uri)
+      res = http.request(req)
+      res
+    end
+
     # @param [String] url URL that points to file.
     # @param [String] filename Filename and path for saving downloaded file.
     def self.get_file(url, filename)

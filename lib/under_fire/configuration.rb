@@ -37,8 +37,14 @@ module UnderFire
 
     # Gracenote API url for use in queries.
     # @return [String]
-    def api_url
-      "https://c#{client_id_string}.web.cddbp.net/webapi/xml/1.0/"
+    def api_url(format = "xml")
+      "https://c#{client_id_string}.web.cddbp.net/webapi/#{format}/1.0/"
+    end
+
+    # Gracenote API url for use in radio queries.
+    # @return [String]
+    def radio_url(format = "xml")
+      "https://c#{client_id_string}.web.cddbp.net/webapi/#{format}/1.0/radio/create"
     end
 
     # Returns true if user has a user_id

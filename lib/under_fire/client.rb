@@ -22,8 +22,19 @@ module UnderFire
     # @return [String] API URL for application.
     attr_reader :api_url
 
-    def initialize
-      @api_url = Configuration.instance.api_url
+    # @return [String] API URL for radio application.
+    attr_reader :radio_url
+
+    def initialize(format = "xml")
+      @api_url = Configuration.instance.api_url(format)
+      @radio_url = Configuration.instance.radio_url(format)
+    end
+
+    def create_radio(params)
+      params.merge!({client: Configuration.instance.client_id})
+      response = APIRequest.get(params, radio_url)
+      puts ".... going to get response.. #{response.body}"
+      APIResponse.new(response.body)
     end
 
     # Searches for album using provided toc offsets.
@@ -57,8 +68,8 @@ module UnderFire
     # Registers user with given client_id
     # @return [APIResponse]
     # @see UnderFire::Registration Description of arguments
-    def register(client_id)
-      search = Registration.new(client_id)
+    def register(app_userid = nil)
+      search = Registration.new(Configuration.instance.client_id, app_userid)
       response = APIRequest.post(search.query, api_url)
       APIResponse.new(response.body)
     end

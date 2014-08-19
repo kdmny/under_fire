@@ -10,11 +10,12 @@ module UnderFire
     attr_reader :query
 
     # @return [String] Gracenote Client ID
-    attr_reader :client_id
+    attr_reader :client_id, :app_userid
 
     # @param [String] client_id Gracenote Client ID.
-    def initialize(client_id)
+    def initialize(client_id, app_userid = nil)
       @client_id = client_id
+      @app_userid = app_userid
       @query = build_query
     end
 
@@ -25,7 +26,8 @@ module UnderFire
       builder = Builder::XmlMarkup.new
       xml = builder.QUERIES {
         builder.QUERY(CMD: 'REGISTER'){
-        builder.CLIENT client_id
+          builder.CLIENT client_id
+          builder.APP_USERID app_userid
         }
       }
       xml
