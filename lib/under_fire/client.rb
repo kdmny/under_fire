@@ -31,7 +31,7 @@ module UnderFire
     end
 
     def create_radio(params)
-      params.merge!({client: Configuration.instance.client_id})
+      params.merge!({client: Configuration.instance.client_id, return_settings: 1, select_extended: "link", return_count: 50})
       response = APIRequest.get(params, radio_url)
       puts ".... going to get response.. #{response.body}"
       APIResponse.new(response.body)
