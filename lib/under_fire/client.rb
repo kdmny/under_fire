@@ -19,22 +19,29 @@ module UnderFire
   class Client
     include UnderFire
 
-    # @return [String] API URL for application.
-    attr_reader :api_url
+    # the user id to make calls on behalf of
+    attr_reader :user_id
 
-    # @return [String] API URL for radio application.
-    attr_reader :radio_url
+    attr_reader :format
 
-    def initialize(format = "xml")
-      @api_url = Configuration.instance.api_url(format)
-      @radio_url = Configuration.instance.radio_url(format)
+    def initialize(format = "json", user_id = nil)
+      @user_id = user_id
+      @format = format
     end
 
     def create_radio(params)
+      params[:user] ||= self.user_id
       params.merge!({client: Configuration.instance.client_id, return_settings: 1, select_extended: "link", return_count: 50})
-      response = APIRequest.get(params, radio_url)
-      puts ".... going to get response.. #{response.body}"
-      APIResponse.new(response.body)
+      response = APIRequest.get(params, Configuration.instance.api_url(@format,"radio/create"))
+      parse_response(response)
+    end
+
+    def find_field_values(fieldname, params = {country: "usa", lang: "en"})
+      params[:user] ||= self.user_id
+      params[:fieldname] = fieldname
+      params.merge!({client: Configuration.instance.client_id, return_settings: 1, select_extended: "link", return_count: 50})
+      response = APIRequest.get(params, Configuration.instance.api_url(@format, "radio/fieldvalues"))
+      parse_response(response)
     end
 
     # Searches for album using provided toc offsets.
@@ -43,8 +50,16 @@ module UnderFire
     def find_by_toc(*offsets)
       offsets = offsets.join(" ")
       search = AlbumTOCSearch.new(:toc => offsets)
-      response = APIRequest.post(search.query, api_url)
-      APIResponse.new(response.body)
+      response = APIRequest.post(search.query, Configuration.instance.api_url(@format))
+      parse_response(response)
+    end
+
+    def parse_response(resp)
+      if @format == "json"
+        JSON.parse(resp.body)
+      else
+        APIResponse.new(resp.body)
+      end
     end
 
     # Finds album using one or more of :artist, :track_title and :album_title
@@ -52,8 +67,8 @@ module UnderFire
     # @see UnderFire::AlbumSearch Description of arguments.
     def find_album(args)
       search = AlbumSearch.new(args)
-      response = APIRequest.post(search.query, api_url)
-      APIResponse.new(response.body)
+      response = APIRequest.post(search.query, Configuration.instance.api_url(@format))
+      parse_response(response)
     end
 
     # Fetches album with given album :gn_id or track :gn_id
@@ -61,8 +76,8 @@ module UnderFire
     # @see UnderFire::AlbumFetch Description of arguments.
     def fetch_album(args)
       search = AlbumFetch.new(args)
-      response = APIRequest.post(search.query, api_url)
-      APIResponse.new(response.body)
+      response = APIRequest.post(search.query, Configuration.instance.api_url(@format))
+      parse_response(response)
     end
 
     # Registers user with given client_id
@@ -70,8 +85,8 @@ module UnderFire
     # @see UnderFire::Registration Description of arguments
     def register(app_userid = nil)
       search = Registration.new(Configuration.instance.client_id, app_userid)
-      response = APIRequest.post(search.query, api_url)
-      APIResponse.new(response.body)
+      response = APIRequest.post(search.query, Configuration.instance.api_url(@format))
+      parse_response(response)
     end
 
     # Fetches cover art using results of query.
